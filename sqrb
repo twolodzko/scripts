@@ -5,6 +5,8 @@ if [[ "$#" -eq 0 ]]; then
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
 elif [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage: $(basename "$0") [branch] [target]"
+    echo
+    echo "Squash the git [branch] and rebase to the [target] branch. If [branch] is not given, use current branch. If [target] is not given, use root branch."
     exit 0
 else
     BRANCH="$1"
