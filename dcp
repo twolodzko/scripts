@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [[ "$#" -lt 2 || "$1" == "-h" || "$1" == "--help" ]]; then
+    printf "Copy files to docker container directory.\n\n"
+    echo "Usage: $(basename $0) files... container:directory"
+    exit 0
+fi
+
+SOURCE="${*%${!#}}"
+TARGET="${@:$#}"
+
+tar cf - "$SOURCE" | docker cp - "$TARGET"
