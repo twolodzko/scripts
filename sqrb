@@ -11,11 +11,8 @@ else
 fi
 
 if [[ $# -lt 2 ]]; then
-    if [[ -z $(git branch | grep dev) ]]; then
-        TARGET=master
-    else
-        TARGET=dev
-    fi
+    # see: https://stackoverflow.com/a/44750379/3986320
+    TARGET=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
 
     read -p "Do you want to squash '$BRANCH' and rebase it to '$TARGET'? (y/[n])? " CONTINUE
     if [[ $CONTINUE != "y" ]]; then
