@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+    PATTERN=""
+else
+    PATTERN="-name $1"
+fi
+
+( find ./ $PATTERN -type f -not -path "./.git*" -print0 | xargs -0 cat 2> /dev/null ) | wc -l
