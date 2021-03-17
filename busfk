@@ -54,4 +54,8 @@ printf "  bf   max%% path\n"
 # sort by the bus factor
 sort -k1,1 /tmp/busfk-results.tmp
 
+printf "\nSummary (averages):\n"
+awk '{ n++; b += $1; f += $2 } END { printf "%4.1f %5.1f%%", b/n, f/n }' /tmp/busfk-results.tmp
+printf " %s\n" "$DIR"
+
 clean
