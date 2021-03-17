@@ -1,0 +1,57 @@
+#!/bin/bash
+set -e
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Usage: $(basename "$0") [path]"
+    echo
+    echo "Calculate bus factor and fraction of lines edited by the most active contributor for files in git repository."
+    exit 0
+fi
+
+# cleanup the temporary files
+clean () { rm -f /tmp/git-files.tmp /tmp/buss-factor.tmp; }
+
+clean
+
+if [ "$#" -eq 0 ]; then
+	DIR=$(pwd)
+else
+	DIR="$1"
+fi
+
+# we need to change the directory to use git
+cd "$DIR"
+
+if [ "$( git rev-parse --is-inside-work-tree 2>/dev/null )" != "true" ]; then
+	echo "Error: $DIR is not a git repository"
+	exit 1
+fi
+
+# list all files, ignore the .git directory
+find "$DIR" -type f -not -path "*/.git/*" > /tmp/git-files.tmp 2>/dev/null
+
+while IFS= read -r file; do
+    if [ -z "$( git check-ignore "$file" 2>&1 )" ]; then
+		authors=$( git blame --line-porcelain "$file" 2>/dev/null \
+					| sed -n 's/^author //p' \
+					| sort \
+					| uniq -c )
+
+		# fraction of lines by the most active editor
+		contrib=$( awk '{ if ($1 > max) max = $1; sum += $1 } END { if (sum > 0) printf "%.1f", max / sum * 100 }' <<< "$authors" )
+
+		# number of unique editors
+        busfactor=$( wc -l <<< "$authors" )
+
+        # filter out empty files etc.
+		if [ "$busfactor" -gt 0 ]; then
+			printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/buss-factor.tmp
+		fi
+    fi
+done < /tmp/git-files.tmp
+
+printf "  bf   max%% path\n"
+# sort by the bus factor
+sort -k1,1 /tmp/buss-factor.tmp
+
+clean
