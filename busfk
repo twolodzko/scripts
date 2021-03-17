@@ -32,21 +32,21 @@ find "$DIR" -type f -not -path "*/.git/*" > /tmp/busfk-files.tmp 2>/dev/null
 
 while IFS= read -r file; do
     if [ -z "$( git check-ignore "$file" 2>&1 )" ]; then
-		authors=$( git blame --line-porcelain "$file" 2>/dev/null \
-					| sed -n 's/^author //p' \
-					| sort \
-					| uniq -c )
+	authors=$( git blame --line-porcelain "$file" 2>/dev/null \
+			| sed -n 's/^author //p' \
+			| sort \
+			| uniq -c )
 
-		# fraction of lines by the most active editor
-		contrib=$( awk '{ if ($1 > max) max = $1; sum += $1 } END { if (sum > 0) printf "%.1f", max / sum * 100 }' <<< "$authors" )
+	# fraction of lines by the most active editor
+	contrib=$( awk '{ if ($1 > max) max = $1; sum += $1 } END { if (sum > 0) printf "%.1f", max / sum * 100 }' <<< "$authors" )
 
-		# number of unique editors
+	# number of unique editors
         busfactor=$( wc -l <<< "$authors" )
 
         # filter out empty files etc.
-		if [ "$busfactor" -gt 0 ]; then
-			printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/busfk-results.tmp
-		fi
+	if [ "$busfactor" -gt 0 ]; then
+		printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/busfk-results.tmp
+	fi
     fi
 done < /tmp/busfk-files.tmp
 
