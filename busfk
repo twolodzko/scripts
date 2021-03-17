@@ -4,12 +4,12 @@ set -e
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "Usage: $(basename "$0") [path]"
     echo
-    echo "Calculate bus factor and fraction of lines edited by the most active contributor for files in git repository."
+    echo "Calculate bus factor and fraction of lines edited by the most active contributor for the files in a git repository."
     exit 0
 fi
 
 # cleanup the temporary files
-clean () { rm -f /tmp/git-files.tmp /tmp/buss-factor.tmp; }
+clean () { rm -f /tmp/busfk-files.tmp /tmp/busfk-results.tmp; }
 
 clean
 
@@ -28,7 +28,7 @@ if [ "$( git rev-parse --is-inside-work-tree 2>/dev/null )" != "true" ]; then
 fi
 
 # list all files, ignore the .git directory
-find "$DIR" -type f -not -path "*/.git/*" > /tmp/git-files.tmp 2>/dev/null
+find "$DIR" -type f -not -path "*/.git/*" > /tmp/busfk-files.tmp 2>/dev/null
 
 while IFS= read -r file; do
     if [ -z "$( git check-ignore "$file" 2>&1 )" ]; then
@@ -45,13 +45,13 @@ while IFS= read -r file; do
 
         # filter out empty files etc.
 		if [ "$busfactor" -gt 0 ]; then
-			printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/buss-factor.tmp
+			printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/busfk-results.tmp
 		fi
     fi
-done < /tmp/git-files.tmp
+done < /tmp/busfk-files.tmp
 
 printf "  bf   max%% path\n"
 # sort by the bus factor
-sort -k1,1 /tmp/buss-factor.tmp
+sort -k1,1 /tmp/busfk-results.tmp
 
 clean
