@@ -2,10 +2,10 @@
 set -e
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "Usage: $(basename "$0") [path] [pattern]"
+    echo "Usage: $(basename "$0") [regex]"
     echo
     echo "Calculate bus factor and fraction of lines edited by the most active contributor for the files in a git repository."
-    echo "It serches the code in the [path] and it can be additionally filtered using a regex [pattern]."
+    echo "It serches the code in the current directory. The results can be filtered using a sed [regex] pattern."
     exit 0
 fi
 
@@ -17,26 +17,17 @@ clean () { rm -f "$TMP_FILES" /tmp/busfk-results.tmp; }
 
 clean
 
-if [ "$#" -eq 0 ]; then
-    DIR=$(pwd)
-else
-    DIR="$1"
-fi
-
-# we need to change the directory to use git
-cd "$DIR"
-
 if [ "$( git rev-parse --is-inside-work-tree 2>/dev/null )" != "true" ]; then
-    echo "Error: $DIR is not a git repository"
+    echo "Error: $(pwd) is not a git repository"
     exit 1
 fi
 
 # list all files, ignore the .git directory
-find "$DIR" -type f -not -path "*/.git/*" 2>/dev/null >"$TMP_FILES"
+find . -type f -not -path "*/.git/*" 2>/dev/null >"$TMP_FILES"
 
 # filter the files using a [pattern]
-if [ -n "$2" ]; then
-    sed -i -n "/$2/p" "$TMP_FILES"
+if [ -n "$1" ]; then
+    sed -i -n "/$1/p" "$TMP_FILES"
 fi
 
 if [ ! -s "$TMP_FILES" ]; then
