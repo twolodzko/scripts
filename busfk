@@ -9,8 +9,11 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
+TMP_FILES="/tmp/busfk-files.tmp"
+TMP_STATS="/tmp/busfk-results.tmp"
+
 # cleanup the temporary files
-clean () { rm -f /tmp/busfk-files.tmp /tmp/busfk-results.tmp; }
+clean () { rm -f "$TMP_FILES" /tmp/busfk-results.tmp; }
 
 clean
 
@@ -29,11 +32,16 @@ if [ "$( git rev-parse --is-inside-work-tree 2>/dev/null )" != "true" ]; then
 fi
 
 # list all files, ignore the .git directory
-find "$DIR" -type f -not -path "*/.git/*" 2>/dev/null >/tmp/busfk-files.tmp
+find "$DIR" -type f -not -path "*/.git/*" 2>/dev/null >"$TMP_FILES"
 
 # filter the files using a [pattern]
 if [ -n "$2" ]; then
-    sed -i -n "/$2/p" /tmp/busfk-files.tmp
+    sed -i -n "/$2/p" "$TMP_FILES"
+fi
+
+if [ ! -s "$TMP_FILES" ]; then
+    echo "No files meet the criteria"
+    exit 0
 fi
 
 while IFS= read -r file; do
@@ -55,17 +63,17 @@ while IFS= read -r file; do
 
         # filter out empty files etc.
         if [ "$busfactor" -gt 0 ]; then
-            printf "%4d %5.1f%% %6d %s\n" "$busfactor" "${contrib:-100.0}" "$lines" "$file" >> /tmp/busfk-results.tmp
+            printf "%4d %5.1f%% %6d %s\n" "$busfactor" "${contrib:-100.0}" "$lines" "$file" >> "$TMP_STATS"
         fi
     fi
-done < /tmp/busfk-files.tmp
+done < "$TMP_FILES"
 
 printf "  bf   max%%  lines path\n"
 # sort by the bus factor
-sort -k1,1 /tmp/busfk-results.tmp
+sort -k1,1 "$TMP_STATS"
 
 printf "\nSummary (weighted averages):\n"
-awk '{ l += $3; b += $1 * $3; f += $2 * $3 } END { printf "%4.1f %5.1f%% %6d", b/l, f/l, l }' /tmp/busfk-results.tmp
+awk '{ l += $3; b += $1 * $3; f += $2 * $3 } END { printf "%4.1f %5.1f%% %6d", b/l, f/l, l }' "$TMP_STATS"
 printf " %s\n" "$DIR"
 
 clean
