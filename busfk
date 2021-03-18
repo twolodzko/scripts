@@ -43,19 +43,21 @@ while IFS= read -r file; do
         # number of unique editors
         busfactor=$( wc -l <<< "$authors" )
 
+		lines=$( wc -l "$file" | awk '{ print $1 }' )
+
         # filter out empty files etc.
         if [ "$busfactor" -gt 0 ]; then
-            printf "%4d %5.1f%% %s\n" "$busfactor" "${contrib:-100.0}" "$file" >> /tmp/busfk-results.tmp
+            printf "%4d %5.1f%% %6d %s\n" "$busfactor" "${contrib:-100.0}" "$lines" "$file" >> /tmp/busfk-results.tmp
         fi
     fi
 done < /tmp/busfk-files.tmp
 
-printf "  bf   max%% path\n"
+printf "  bf   max%%  lines path\n"
 # sort by the bus factor
 sort -k1,1 /tmp/busfk-results.tmp
 
-printf "\nSummary (averages):\n"
-awk '{ n++; b += $1; f += $2 } END { printf "%4.1f %5.1f%%", b/n, f/n }' /tmp/busfk-results.tmp
+printf "\nSummary (weighted averages):\n"
+awk '{ l += $3; b += $1 * $3; f += $2 * $3 } END { printf "%4.1f %5.1f%% %6d", b/l, f/l, l }' /tmp/busfk-results.tmp
 printf " %s\n" "$DIR"
 
 clean
