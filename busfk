@@ -43,7 +43,7 @@ while IFS= read -r file; do
         # number of unique editors
         busfactor=$( wc -l <<< "$authors" )
 
-		lines=$( wc -l "$file" | awk '{ print $1 }' )
+        lines=$( wc -l "$file" | awk '{ print $1 }' )
 
         # filter out empty files etc.
         if [ "$busfactor" -gt 0 ]; then
