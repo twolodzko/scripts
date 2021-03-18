@@ -2,9 +2,10 @@
 set -e
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "Usage: $(basename "$0") [path]"
+    echo "Usage: $(basename "$0") [path] [pattern]"
     echo
     echo "Calculate bus factor and fraction of lines edited by the most active contributor for the files in a git repository."
+    echo "It serches the code in the [path] and it can be additionally filtered using a regex [pattern]."
     exit 0
 fi
 
@@ -28,9 +29,16 @@ if [ "$( git rev-parse --is-inside-work-tree 2>/dev/null )" != "true" ]; then
 fi
 
 # list all files, ignore the .git directory
-find "$DIR" -type f -not -path "*/.git/*" > /tmp/busfk-files.tmp 2>/dev/null
+find "$DIR" -type f -not -path "*/.git/*" 2>/dev/null >/tmp/busfk-files.tmp
+
+# filter the files using a [pattern]
+if [ -n "$2" ]; then
+    sed -i -n "/$2/p" /tmp/busfk-files.tmp
+fi
 
 while IFS= read -r file; do
+
+    # skip files mentioned in .gitignore
     if [ -z "$( git check-ignore "$file" 2>&1 )" ]; then
         authors=$( git blame --line-porcelain "$file" 2>/dev/null \
                 | sed -n 's/^author //p' \
