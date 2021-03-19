@@ -1,17 +1,18 @@
-DESTDIR := ${HOME}/.local/bin/
 .DEFAULT_GOAL := help
 .PHONY: install check help
 
-check:
-	@ for file in $$(ls -I Makefile); do \
-		printf "Checking: %s\n" "$$file"; \
-		shellcheck "$$file"; \
-	done
+check: *.sh
+	shellcheck $?
 
-install:
-	@ for file in $$(ls -I Makefile); do \
-		chmod +x "$$file"; \
-		cp -v "$$file" ${DESTDIR}; \
+install: *.sh
+ifeq ($(DESTDIR),)
+	$(error Installation DESTDIR was not privided)
+endif
+	@ echo "Installing:"
+	@ chmod +x $?
+	@ mkdir -p $(DESTDIR)
+	@ for file in $?; do \
+		cp -v "$${file}" "${DESTDIR}"/"$${file%.sh}" ; \
 	done
 
 help:
