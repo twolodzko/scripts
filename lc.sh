@@ -7,13 +7,7 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-if [[ -z "$1" ]]; then
-    PATTERN=
-else
-    PATTERN="-name $1"
-fi
-
 DIR="${2:-$(pwd)}"
 
 # shellcheck disable=SC2086
-( find "$DIR" $PATTERN -type f -not -path "./.git*" -print0 | xargs -0 cat 2> /dev/null ) | wc -l
+( find "$DIR" -type f -name "${1:-*}" -not -path '*/\.git/*' -print0 | xargs -0 cat 2> /dev/null ) | wc -l

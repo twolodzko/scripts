@@ -5,18 +5,18 @@ check: *.sh
 	shellcheck $?
 
 install: *.sh
-ifeq ($(DESTDIR),)
-	$(error Installation DESTDIR was not privided)
+ifeq ($(PREFIX),)
+	$(error Installation PREFIX was not privided)
 endif
 	@ echo "Installing:"
 	@ chmod +x $?
-	@ mkdir -p $(DESTDIR)
+	@ mkdir -p $(PREFIX)
 	@ for file in $?; do \
-		cp -v "$${file}" "${DESTDIR}"/"$${file%.sh}" ; \
+		cp -v "$${file}" "${PREFIX}"/"$${file%.sh}" ; \
 	done
 
 help:
 	@ echo "Available commands:"
 	@ echo
 	@ echo "make check"
-	@ echo "make install DESTDIR=${DESTDIR}"
+	@ echo "make install PREFIX=${PREFIX}"
